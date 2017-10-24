@@ -94,15 +94,25 @@ class GzipTests: XCTestCase {
     
     
     func testFileDecompression() {
-        
+#if os(OSX) || os(iOS)
         let bundle = Bundle(for: type(of: self))
         guard let url = bundle.url(forResource: "test.txt", withExtension: "gz") else { return }
+#else
+        let url = URL(fileURLWithPath: "./Tests/test.txt.gz")
+#endif
         let data = try! Data(contentsOf: url)
         let uncompressed = try! data.gunzipped()
         
         XCTAssertEqual(String(data: uncompressed, encoding: .utf8), "test")
     }
-    
+
+    static var allTests = [
+        ("testGZip", testGZip),
+        ("testZeroLength", testZeroLength),
+        ("testWrongUngzip", testWrongUngzip),
+        ("testCompressionLevel", testCompressionLevel),
+        ("testFileDecompression", testFileDecompression)
+    ]
 }
 
 
@@ -115,7 +125,11 @@ private extension String {
         
         var string = ""
         for _ in 0..<length {
+#if os(Linux)
+            let rand = Int(random() % letters.characters.count)
+#else
             let rand = Int(arc4random_uniform(UInt32(letters.characters.count)))
+#endif
             let index = letters.index(letters.startIndex, offsetBy: rand)
             let character = letters.characters[index]
             string.append(character)
